@@ -1,0 +1,66 @@
+use eframe::egui;
+use std::{fs::File, io::Read};
+
+#[repr(C)]
+#[derive(Debug)]
+struct InputEvent {
+    pad: [u64; 2],
+    typ: u16,
+    code: u16,
+    value: i32,
+}
+
+impl InputEvent {
+    pub fn new() -> InputEvent {
+        return InputEvent {
+            pad: [0; 2],
+            typ: 0,
+            code: 0,
+            value: 0,
+        };
+    }
+}
+
+fn main() {
+    let mut f = File::open("/dev/input/by-id/usb-Evision_RGB_Keyboard-event-kbd").unwrap();
+
+    let mut event = InputEvent::new();
+    unsafe {
+        loop {
+            let event_buf = std::slice::from_raw_parts_mut(
+                &mut event as *mut _ as *mut u8,
+                core::mem::size_of::<InputEvent>(),
+            );
+            f.read_exact(event_buf).unwrap();
+            println!("{:?}", event);
+        }
+    }
+
+    // let native_options = eframe::NativeOptions::default();
+    // let _ = eframe::run_native(
+    //     "Keyboard Interface",
+    //     native_options,
+    //     Box::new(|cc| Ok(Box::new(MyEguiApp::new(cc)))),
+    // );
+}
+
+#[derive(Default)]
+struct MyEguiApp {}
+
+impl MyEguiApp {
+    fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        // Customize egui here with cc.egui_ctx.set_fonts and cc.egui_ctx.set_visuals.
+        // Restore app state using cc.storage (requires the "persistence" feature).
+        // Use the cc.gl (a glow::Context) to create graphics shaders and buffers that you can use
+        // for e.g. egui::PaintCallback.
+        Self::default()
+    }
+}
+
+impl eframe::App for MyEguiApp {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.heading("Hello World!");
+        });
+    }
+}
