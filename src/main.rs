@@ -1,4 +1,3 @@
-use eframe::egui;
 use std::{
     collections::VecDeque,
     fs::File,
@@ -6,6 +5,8 @@ use std::{
     sync::mpsc::{self, Receiver, Sender},
     thread,
 };
+
+use eframe::egui;
 
 #[repr(C)]
 #[derive(Debug)]
@@ -68,7 +69,11 @@ fn main() {
 
     let t = thread::spawn(move || reader_thread(key_code_tx, ctx_rx));
 
-    let native_options = eframe::NativeOptions::default();
+    let mut native_options = eframe::NativeOptions::default();
+    native_options.viewport = native_options
+        .viewport
+        .with_transparent(true)
+        .with_decorations(false);
     let _ = eframe::run_native(
         "Keyboard Interface",
         native_options,
@@ -90,10 +95,12 @@ impl KeyPrinter {
         tx: Sender<egui::Context>,
     ) -> Self {
         tx.send(cc.egui_ctx.clone()).unwrap();
-        // Customize egui here with cc.egui_ctx.set_fonts and cc.egui_ctx.set_visuals.
-        // Restore app state using cc.storage (requires the "persistence" feature).
-        // Use the cc.gl (a glow::Context) to create graphics shaders and buffers that you can use
-        // for e.g. egui::PaintCallback.
+        cc.egui_ctx
+            .style_mut(|style| style.visuals.window_fill = egui::Color32::TRANSPARENT);
+        cc.egui_ctx.style_mut(|style| {
+            style.visuals.panel_fill = egui::Color32::from_rgba_premultiplied(0, 0, 0, 127)
+        });
+
         return KeyPrinter {
             rx,
             pressed_key_codes: VecDeque::<u16>::new(),
@@ -110,9 +117,15 @@ impl eframe::App for KeyPrinter {
             self.pressed_key_codes.push_back(event.code);
         }
         egui::CentralPanel::default().show(ctx, |ui| {
+            ui.horizontal(|ui| {
             for code in &self.pressed_key_codes {
-                ui.label(code_to_char(*code));
+                let rich_text = egui::RichText::new(code_to_char(*code))
+                    .family(egui::FontFamily::Monospace)
+                    .color(egui::Color32::WHITE)
+                    .size(40.0);
+                ui.label(rich_text);
             }
+        });
         });
     }
 }
