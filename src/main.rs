@@ -118,14 +118,14 @@ impl eframe::App for KeyPrinter {
         }
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui| {
-            for code in &self.pressed_key_codes {
-                let rich_text = egui::RichText::new(code_to_char(*code))
-                    .family(egui::FontFamily::Monospace)
-                    .color(egui::Color32::WHITE)
-                    .size(40.0);
-                ui.label(rich_text);
-            }
-        });
+                for code in &self.pressed_key_codes {
+                    let rich_text = egui::RichText::new(code_to_char(*code))
+                        .family(egui::FontFamily::Monospace)
+                        .color(egui::Color32::WHITE)
+                        .size(40.0);
+                    ui.label(rich_text);
+                }
+            });
         });
     }
 }
@@ -144,8 +144,8 @@ fn code_to_char(code: u16) -> &'static str {
         11 => " 0",
         12 => "-",
         13 => "=",
-        14 => "BACKSPACE",
-        15 => "<Tab>",
+        14 => "<BACKSPACE>",
+        15 => "<TAB>",
         16 => "Q",
         17 => "W",
         18 => "E",
@@ -158,8 +158,8 @@ fn code_to_char(code: u16) -> &'static str {
         25 => "P",
         26 => "[",
         27 => "]",
-        28 => "ENTER",
-        29 => "L-CTL",
+        28 => "<ENTER>",
+        29 => "<L-CTL>",
         30 => "A",
         31 => "S",
         32 => "D",
@@ -172,7 +172,7 @@ fn code_to_char(code: u16) -> &'static str {
         39 => ";",
         40 => "'",
         41 => "`",
-        42 => "L-Shift",
+        42 => "<L-Shift>",
         43 => "\\",
         44 => "Z",
         45 => "X",
@@ -184,10 +184,10 @@ fn code_to_char(code: u16) -> &'static str {
         51 => ",",
         52 => ".",
         53 => "/",
-        54 => "R-Shift",
+        54 => "<R-Shift>",
         55 => "KPASTERISK",
-        56 => "L-Alt",
-        57 => "SPACE",
+        56 => "<L-Alt>",
+        57 => "_",
         58 => "CAPSLOCK",
         59 => "F1",
         60 => "F2",
