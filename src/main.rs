@@ -42,7 +42,19 @@ fn reader_thread(tx: Sender<InputEvent>, rx: Receiver<egui::Context>) -> () {
                 );
                 f.read_exact(event_buf).unwrap();
             }
-            // println!("{:?}", event);
+
+            // src: https://github.com/torvalds/linux/blob/528dd46d0fc35c0176257a13a27d41e44fcc6cb3/include/uapi/linux/input-event-codes.h#L39
+            const EV_KEY: u16 = 1;
+
+            const VALUE_KEY_UP: i32 = 0;
+            // const VALUE_KEY_DOWN: i32 = 1;
+            // const VALUE_KEY_REPEAT: i32 = 2;
+
+            if event.code == 0 || event.typ != EV_KEY || event.value == VALUE_KEY_UP {
+                println!("Skipped, {:?}", event);
+                continue;
+            }
+            println!("{:?}", event);
             tx.send(event).unwrap();
             ctx.request_repaint();
         }
@@ -62,6 +74,8 @@ fn main() {
         native_options,
         Box::new(move |cc| Ok(Box::new(KeyPrinter::new(cc, key_code_rx, ctx_tx)))),
     );
+
+    // let _ = t.join();
 }
 
 struct KeyPrinter {
@@ -90,13 +104,15 @@ impl KeyPrinter {
 impl eframe::App for KeyPrinter {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         while let Ok(event) = self.rx.try_recv() {
+            if self.pressed_key_codes.len() > 20 {
+                let _ = self.pressed_key_codes.pop_front();
+            }
             self.pressed_key_codes.push_back(event.code);
         }
         egui::CentralPanel::default().show(ctx, |ui| {
             for code in &self.pressed_key_codes {
                 ui.label(code_to_char(*code));
             }
-            ui.heading("Hello World!");
         });
     }
 }
@@ -113,10 +129,10 @@ fn code_to_char(code: u16) -> &'static str {
         9 => "8",
         10 => "9",
         11 => " 0",
-        12 => "MINUS",
-        13 => "EQUAL",
+        12 => "-",
+        13 => "=",
         14 => "BACKSPACE",
-        15 => "TAB",
+        15 => "<Tab>",
         16 => "Q",
         17 => "W",
         18 => "E",
@@ -127,10 +143,10 @@ fn code_to_char(code: u16) -> &'static str {
         23 => "I",
         24 => "O",
         25 => "P",
-        26 => "LEFTBRACE",
-        27 => "RIGHTBRACE",
+        26 => "[",
+        27 => "]",
         28 => "ENTER",
-        29 => "LEFTCTRL",
+        29 => "L-CTL",
         30 => "A",
         31 => "S",
         32 => "D",
@@ -140,11 +156,11 @@ fn code_to_char(code: u16) -> &'static str {
         36 => "J",
         37 => "K",
         38 => "L",
-        39 => "SEMICOLON",
-        40 => "APOSTROPHE",
-        41 => "GRAVE",
-        42 => "LEFTSHIFT",
-        43 => "BACKSLASH",
+        39 => ";",
+        40 => "'",
+        41 => "`",
+        42 => "L-Shift",
+        43 => "\\",
         44 => "Z",
         45 => "X",
         46 => "C",
@@ -152,12 +168,12 @@ fn code_to_char(code: u16) -> &'static str {
         48 => "B",
         49 => "N",
         50 => "M",
-        51 => "COMMA",
-        52 => "DOT",
-        53 => "SLASH",
-        54 => "RIGHTSHIFT",
+        51 => ",",
+        52 => ".",
+        53 => "/",
+        54 => "R-Shift",
         55 => "KPASTERISK",
-        56 => "LEFTALT",
+        56 => "L-Alt",
         57 => "SPACE",
         58 => "CAPSLOCK",
         59 => "F1",
@@ -172,6 +188,13 @@ fn code_to_char(code: u16) -> &'static str {
         68 => "F10",
         69 => "NUMLOCK",
         70 => "SCROLLLOCK",
-        _ => "<UNK>",
+        103 => "UP",
+        105 => "LEFT",
+        106 => "RIGHT",
+        108 => "DOWN",
+        _ => {
+            // println!("Unknown code: {}", code); // Log the unexpected value
+            return "<UNK>";
+        }
     }
 }
